@@ -145,20 +145,17 @@ with tab_enkripsi:
 
         cipher_std = st.text_area(
             "Cipher AES Standar (hex)",
-            value="",
             height=120,
             key="cipher_std",
         )
         cipher_44 = st.text_area(
             "Cipher AES SBOX44 (hex)",
-            value="",
             height=120,
             key="cipher_44",
         )
 
         decrypted_output = st.text_area(
             "Plaintext dari dekripsi",
-            value="",
             height=120,
             key="dec_plaintext_out",
         )
@@ -166,13 +163,6 @@ with tab_enkripsi:
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ------------- Logika proses enkripsi/dekripsi -------------
-    # simpan di session_state supaya tombol bisa update isi field
-    if "cipher_std_val" not in st.session_state:
-        st.session_state["cipher_std_val"] = ""
-    if "cipher_44_val" not in st.session_state:
-        st.session_state["cipher_44_val"] = ""
-    if "dec_plain_val" not in st.session_state:
-        st.session_state["dec_plain_val"] = ""
 
     # validasi key
     def _validate_key(k: str):
@@ -187,8 +177,6 @@ with tab_enkripsi:
             try:
                 ct = kripto.encrypt_aes_std_str(plaintext, key_str)
                 st.session_state["cipher_std_val"] = ct
-                st.session_state["cipher_44_val"] = st.session_state.get("cipher_44_val", "")
-                st.session_state["dec_plain_val"] = ""
             except Exception as e:
                 st.error(f"Enkripsi AES Std gagal: {e}")
 
@@ -198,8 +186,6 @@ with tab_enkripsi:
             try:
                 ct = kripto.encrypt_aes_44_str(plaintext, key_str)
                 st.session_state["cipher_44_val"] = ct
-                st.session_state["cipher_std_val"] = st.session_state.get("cipher_std_val", "")
-                st.session_state["dec_plain_val"] = ""
             except Exception as e:
                 st.error(f"Enkripsi SBOX44 gagal: {e}")
 
@@ -212,20 +198,15 @@ with tab_enkripsi:
 
                 if src_std:
                     plain = kripto.decrypt_aes_std_str(src_std, key_str)
-                    st.session_state["dec_plain_val"] = plain
                 elif src_44:
                     plain = kripto.decrypt_aes_44_str(src_44, key_str)
-                    st.session_state["dec_plain_val"] = plain
                 else:
+                    plain = ""
                     st.warning("Isi salah satu ciphertext (AES Std atau SBOX44) sebelum dekripsi.")
+
+                st.session_state["dec_plaintext_out"] = plain
             except Exception as e:
                 st.error(f"Dekripsi gagal: {e}")
-
-    # Sinkronisasi dengan widget teks
-    st.session_state["cipher_std"] = st.session_state.get("cipher_std_val", "")
-    st.session_state["cipher_44"] = st.session_state.get("cipher_44_val", "")
-    st.session_state["dec_plaintext_out"] = st.session_state.get("dec_plain_val", "")
-
 
 # ======================================================
 # TAB 2 — AVALANCHE & KEY SENSITIVITY
@@ -405,5 +386,6 @@ with tab_avalanche:
                     st.error(f"Perhitungan key sensitivity gagal: {e}")
 
         st.markdown("</div>", unsafe_allow_html=True)
+
 
 
