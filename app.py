@@ -153,18 +153,17 @@ with tab_enkripsi:
             height=120,
             key="cipher_44",
         )
-
         decrypted_output = st.text_area(
             "Plaintext dari dekripsi",
             height=120,
             key="dec_plaintext_out",
         )
 
+
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ------------- Logika proses enkripsi/dekripsi -------------
 
-    # validasi key
     def _validate_key(k: str):
         if len(k.encode("utf-8")) != 16:
             st.error("Key harus tepat 16 byte (16 karakter sederhana).")
@@ -176,7 +175,8 @@ with tab_enkripsi:
         if _validate_key(key_str):
             try:
                 ct = kripto.encrypt_aes_std_str(plaintext, key_str)
-                st.session_state["cipher_std_val"] = ct
+                # tampilkan di text_area
+                st.session_state["cipher_std"] = ct
             except Exception as e:
                 st.error(f"Enkripsi AES Std gagal: {e}")
 
@@ -185,16 +185,18 @@ with tab_enkripsi:
         if _validate_key(key_str):
             try:
                 ct = kripto.encrypt_aes_44_str(plaintext, key_str)
-                st.session_state["cipher_44_val"] = ct
+                # tampilkan di text_area
+                st.session_state["cipher_44"] = ct
             except Exception as e:
                 st.error(f"Enkripsi SBOX44 gagal: {e}")
 
-    # DECRYPT (prioritas: jika isian cipher_std ada → pakai AES Std, kalau tidak → pakai SBOX44)
+    # DECRYPT
     if dec_btn:
         if _validate_key(key_str):
             try:
-                src_std = st.session_state.get("cipher_std_val") or cipher_std.strip()
-                src_44 = st.session_state.get("cipher_44_val") or cipher_44.strip()
+                # ambil dari widget (yang sudah otomatis sinkron dengan session_state)
+                src_std = st.session_state.get("cipher_std", "").strip()
+                src_44 = st.session_state.get("cipher_44", "").strip()
 
                 if src_std:
                     plain = kripto.decrypt_aes_std_str(src_std, key_str)
@@ -386,6 +388,7 @@ with tab_avalanche:
                     st.error(f"Perhitungan key sensitivity gagal: {e}")
 
         st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
