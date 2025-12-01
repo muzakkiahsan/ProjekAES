@@ -15,15 +15,11 @@ st.set_page_config(
     layout="wide",
 )
 
-# Palet warna baru (dark + warm)
-PRIMARY = "#F97316"   # oranye hangat (utama)
-ACCENT  = "#22C55E"   # hijau untuk status OK
-DANGER  = "#F97373"   # merah lembut untuk error
-BG      = "#020617"   # sangat gelap (slate-950)
-CARD_BG = "#0B1120"   # gelap, sedikit lebih terang
-BORDER  = "#1F2937"   # border halus
-TEXT    = "#E5E7EB"   # teks utama abu cerah
-MUTED   = "#9CA3AF"   # teks sekunder
+# Palet warna baru (lebih hangat)
+PRIMARY = "#F97316"  # oranye hangat (utama)
+ACCENT = "#16A34A"   # hijau lembut untuk status OK
+DANGER = "#DC2626"   # merah untuk error
+BG = "#FFF7ED"       # krem hangat sebagai background
 
 st.markdown(
     f"""
@@ -33,13 +29,10 @@ st.markdown(
         line-height: 1.5;
     }}
 
-    /* background halaman */
     .stApp {{
         background-color: {BG};
-        color: {TEXT};
     }}
 
-    /* container utama */
     .block-container {{
         padding-top: 1.5rem;
         padding-bottom: 1.5rem;
@@ -49,18 +42,17 @@ st.markdown(
         margin: 0 auto;
     }}
 
-    /* kartu statistik dan konten */
     .card {{
-        background-color: {CARD_BG};
+        background-color: #FFFFFF;
         border-radius: 14px;
         padding: 1.2rem 1.4rem;
-        border: 1px solid {BORDER};
-        box-shadow: 0 12px 30px rgba(0,0,0,0.55);
+        border: 1px solid #F3E8FF20;
+        box-shadow: 0 8px 18px rgba(15,23,42,0.06);
     }}
 
     .card-title {{
         font-size: 0.9rem;
-        color: {MUTED};
+        color: #6B7280;
         text-transform: uppercase;
         letter-spacing: 0.08em;
         margin-bottom: 0.4rem;
@@ -69,111 +61,62 @@ st.markdown(
     .card-value {{
         font-size: 1.8rem;
         font-weight: 700;
-        color: {TEXT};
+        color: #1F2933;
         margin-bottom: 0.25rem;
     }}
 
     .badge-primary {{
-        background: radial-gradient(circle at top left, #FED7AA, {PRIMARY});
-        color: #111827;
+        background: linear-gradient(135deg, {PRIMARY}, #FDBA74);
+        color: white;
         border-radius: 999px;
         padding: 0.25rem 0.8rem;
         font-size: 0.75rem;
         font-weight: 600;
-        border: 1px solid rgba(0,0,0,0.6);
+        border: none;
     }}
 
     .small-label {{
         font-size: 0.82rem;
-        color: {MUTED};
+        color: #6B7280;
     }}
 
     textarea {{
         font-size: 0.95rem !important;
-        background-color: #020617 !important;
-        color: {TEXT} !important;
     }}
 
-    /* heading utama */
     .page-header-title {{
         margin-bottom: 0;
         font-size: 1.7rem;
         font-weight: 700;
-        color: {TEXT};
+        color: #1F2933;
     }}
 
     .page-header-subtitle {{
-        color: {MUTED};
+        color: #6B7280;
         margin-top: 0.25rem;
         font-size: 0.9rem;
     }}
 
-    /* section label */
     .section-label {{
         font-size: 0.8rem;
         font-weight: 600;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: {MUTED};
+        color: #9CA3AF;
         margin-bottom: 0.3rem;
     }}
 
-    /* input background override */
-    .stTextInput input, .stTextArea textarea {{
-        background-color: #020617 !important;
-        color: {TEXT} !important;
-        border-radius: 0.6rem;
-        border: 1px solid {BORDER} !important;
-    }}
-
-    .stTextInput input:focus, .stTextArea textarea:focus {{
-        border-color: {PRIMARY} !important;
-        box-shadow: 0 0 0 1px {PRIMARY}33;
-    }}
-
-    /* radio / segmented */
     .stRadio > label, .st-emotion-cache-1x8cf1d > label {{
         font-size: 0.9rem;
         font-weight: 600;
-        color: {TEXT};
     }}
 
-    /* sidebar */
-    section[data-testid="stSidebar"] {{
-        background-color: #020617;
-        border-right: 1px solid {BORDER};
+    .stTextInput, .stTextArea {{
+        margin-bottom: 0.5rem;
     }}
 
-    section[data-testid="stSidebar"] .small-label {{
-        color: {MUTED};
-    }}
-
-    /* markdown default text */
-    .markdown-text-container {{
-        color: {TEXT};
-    }}
-
-    /* code block */
-    pre, code {{
-        background-color: #020617 !important;
-        color: {TEXT} !important;
-        border-radius: 0.6rem !important;
-        border: 1px solid {BORDER} !important;
-    }}
-
-    /* tombol */
-    .stButton button {{
-        background: linear-gradient(135deg, {PRIMARY}, #FDBA74);
-        color: #111827;
-        border-radius: 999px;
-        border: none;
-        font-weight: 600;
-        padding: 0.45rem 1.1rem;
-    }}
-
-    .stButton button:hover {{
-        filter: brightness(1.05);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    .st-emotion-cache-1y4p8pa, .stTooltipIcon span {{
+        font-size: 0.8rem !important;
     }}
     </style>
     """,
@@ -202,7 +145,7 @@ with st.sidebar:
     st.markdown(
         """
         <span class="small-label">
-        Demo enkripsi & dekripsi AES:
+        Demo sederhana enkripsi & dekripsi AES dengan dua varian:
         <br>- AES standar (S-BOX standar)
         <br>- AES SBOX44 (modifikasi)
         </span>
@@ -231,11 +174,11 @@ st.markdown(
         align-items:center;
         margin-bottom:1.2rem;
         padding-bottom:0.6rem;
-        border-bottom:1px solid {BORDER};">
+        border-bottom:1px solid #E5E7EB;">
         <div>
             <div class="page-header-title">AES Crypto Dashboard</div>
             <p class="page-header-subtitle">
-                Simple dashboard untuk mencoba enkripsi & dekripsi AES dalam tampilan darkmode yang nyaman.
+                Simple dashboard untuk mencoba enkripsi & dekripsi AES dengan tampilan yang lebih bersih dan nyaman dibaca.
             </p>
         </div>
         <div>
@@ -307,15 +250,15 @@ if menu == "Dashboard":
             unsafe_allow_html=True,
         )
 
-    st.markdown("### Ringkasan")
+    st.markdown("### 📊 Ringkasan")
     st.write(
         """
-        Statistik singkat:
-        - Total enkripsi dan dekripsi yang berhasil.
+        Halaman ini menampilkan statistik singkat:
+        - Berapa kali enkripsi dan dekripsi berhasil dilakukan.
         - Varian AES terakhir yang digunakan.
         - Status operasi terakhir (berhasil atau error).
 
-        Semua statistik hanya berlaku selama sesi aktif (session state).
+        Semua angka dihitung di sisi frontend (session state), dan akan reset jika halaman direfresh.
         """
     )
 
@@ -335,11 +278,19 @@ elif menu == "Encrypt / Decrypt":
             ["AES Standard (S-BOX Std)", "AES SBOX44 (Modifikasi)"],
         )
 
-        mode = st.segmented_control(
-            "Mode Operasi",
-            options=["Enkripsi", "Dekripsi"],
-            default="Enkripsi",
-        )
+        # Jika versi Streamlit tidak punya segmented_control, ganti ke radio
+        try:
+            mode = st.segmented_control(
+                "Mode Operasi",
+                options=["Enkripsi", "Dekripsi"],
+                default="Enkripsi",
+            )
+        except AttributeError:
+            mode = st.radio(
+                "Mode Operasi",
+                ["Enkripsi", "Dekripsi"],
+                index=0,
+            )
 
         key = st.text_input(
             "Key (16 karakter / 128-bit)",
@@ -355,14 +306,14 @@ elif menu == "Encrypt / Decrypt":
                 """
                 - Masukkan **plaintext biasa** (huruf, angka, simbol).
                 - Output akan berupa **hex string**.
-                - Simpan hex string jika ingin didekripsi lagi.
+                - Simpan hex string itu jika ingin didekripsi lagi.
                 """
             )
         else:
             st.markdown(
                 """
-                - Masukkan **ciphertext dalam bentuk hex** (hasil enkripsi).
-                - Tanpa spasi, panjang valid (kelipatan 32 hex per blok).
+                - Masukkan **ciphertext dalam bentuk hex** (hasil enkripsi sebelumnya).
+                - Pastikan tidak ada spasi dan panjangnya valid (kelipatan 32 hex per blok).
                 - Hasil dekripsi berupa **plaintext**.
                 """
             )
@@ -438,7 +389,7 @@ else:
         Aplikasi ini adalah demo sederhana untuk:
         - Enkripsi dan dekripsi teks menggunakan **AES-128**.
         - Membandingkan implementasi **AES standar** dan **AES SBOX44 (modifikasi)**.
-        
+
         Backend fungsi AES diambil dari file `aes_backend.py` yang berisi
         implementasi lengkap (S-BOX, key schedule, dan komponen lain).
         """
