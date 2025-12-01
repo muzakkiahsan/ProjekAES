@@ -2,7 +2,7 @@
 import streamlit as st
 import textwrap
 
-from aes_backend.kelompok_idub_projek_kripto import *
+import aes_backend as kripto
 
 # =========================
 # Styling dasar + "card"
@@ -405,4 +405,5 @@ with tab_avalanche:
                     st.error(f"Perhitungan key sensitivity gagal: {e}")
 
         st.markdown("</div>", unsafe_allow_html=True)
+
 
