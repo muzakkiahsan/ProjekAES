@@ -1,5 +1,3 @@
-%%writefile app.py
-
 import streamlit as st
 import pandas as pd
 import crypto_core as cc
@@ -1072,3 +1070,4 @@ elif menu == "Bulk Test Analysis":
 # Footer
 st.markdown("---")
 st.caption("🔐 AES vs SBOX44 Analyzer | Cryptographic Analysis Tool")
+
