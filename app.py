@@ -15,58 +15,116 @@ st.set_page_config(
     layout="wide",
 )
 
-PRIMARY = "#2F54EB"     # biru utama (mirip dashboard)
-ACCENT  = "#10B981"     # hijau (status OK)
-DANGER  = "#EF4444"     # merah
-BG      = "#F5F7FB"     # background lembut
+# Palet warna baru (lebih hangat)
+PRIMARY = "#F97316"  # oranye hangat (utama)
+ACCENT = "#16A34A"  # hijau lembut untuk status OK
+DANGER = "#DC2626"  # merah untuk error
+BG = "#FFF7ED"  # krem hangat sebagai background
 
 st.markdown(
     f"""
     <style>
+    html, body, [class*="stApp"] {{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+    }}
+
     /* background halaman */
     .stApp {{
         background-color: {BG};
     }}
-    /* container utama biar agak mepet kiri-kanan */
+
+    /* container utama */
     .block-container {{
         padding-top: 1.5rem;
         padding-bottom: 1.5rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
+        padding-left: 2.2rem;
+        padding-right: 2.2rem;
+        max-width: 1200px;
+        margin: 0 auto;
     }}
+
+    /* kartu statistik dan konten */
     .card {{
         background-color: #FFFFFF;
         border-radius: 14px;
-        padding: 1.1rem 1.3rem;
-        border: 1px solid #E5E7EB;
-        box-shadow: 0 1px 3px rgba(15,23,42,0.08);
+        padding: 1.2rem 1.4rem;
+        border: 1px solid #F3E8FF20;
+        box-shadow: 0 8px 18px rgba(15,23,42,0.06);
     }}
+
     .card-title {{
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         color: #6B7280;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.35rem;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.4rem;
     }}
+
     .card-value {{
-        font-size: 1.6rem;
+        font-size: 1.8rem;
         font-weight: 700;
-        color: #111827;
+        color: #1F2933;
+        margin-bottom: 0.25rem;
     }}
+
     .badge-primary {{
-        background-color: {PRIMARY};
+        background: linear-gradient(135deg, {PRIMARY}, #FDBA74);
         color: white;
         border-radius: 999px;
-        padding: 0.15rem 0.6rem;
-        font-size: 0.7rem;
+        padding: 0.25rem 0.8rem;
+        font-size: 0.75rem;
         font-weight: 600;
+        border: none;
     }}
+
     .small-label {{
-        font-size: 0.8rem;
+        font-size: 0.82rem;
         color: #6B7280;
     }}
+
     textarea {{
-        font-size: 0.9rem !important;
+        font-size: 0.95rem !important;
+    }}
+
+    /* heading utama */
+    .page-header-title {{
+        margin-bottom: 0;
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: #1F2933;
+    }}
+
+    .page-header-subtitle {{
+        color: #6B7280;
+        margin-top: 0.25rem;
+        font-size: 0.9rem;
+    }}
+
+    /* garis pemisah section */
+    .section-label {{
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #9CA3AF;
+        margin-bottom: 0.3rem;
+    }}
+
+    /* rapikan radio/segmented di sidebar dan main */
+    .stRadio > label, .st-emotion-cache-1x8cf1d > label {{
+        font-size: 0.9rem;
+        font-weight: 600;
+    }}
+
+    /* sedikit spacing antar widget */
+    .stTextInput, .stTextArea {{
+        margin-bottom: 0.5rem;
+    }}
+
+    /* tooltip / help text */
+    .st-emotion-cache-1y4p8pa, .stTooltipIcon span {{
+        font-size: 0.8rem !important;
     }}
     </style>
     """,
@@ -87,7 +145,6 @@ if "last_mode" not in st.session_state:
 if "last_success" not in st.session_state:
     st.session_state.last_success = False
 
-
 # =========================
 #  SIDEBAR
 # =========================
@@ -97,7 +154,8 @@ with st.sidebar:
         """
         <span class="small-label">
         Demo sederhana enkripsi & dekripsi AES dengan dua varian:
-        <br>- AES standar (S-BOX standar)<br>- AES SBOX44 (modifikasi)
+        <br>- AES standar (S-BOX standar)
+        <br>- AES SBOX44 (modifikasi)
         </span>
         """,
         unsafe_allow_html=True,
@@ -113,17 +171,22 @@ with st.sidebar:
     st.markdown("---")
     st.caption("Made with Streamlit")
 
-
 # =========================
 #  HEADER ATAS
 # =========================
 st.markdown(
     f"""
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:1.2rem;
+        padding-bottom:0.6rem;
+        border-bottom:1px solid #E5E7EB;">
         <div>
-            <h2 style="margin-bottom:0;">AES Crypto Dashboard</h2>
-            <p style="color:#6B7280; margin-top:0.2rem; font-size:0.9rem;">
-                Simple dashboard untuk mencoba enkripsi & dekripsi AES.
+            <div class="page-header-title">AES Crypto Dashboard</div>
+            <p class="page-header-subtitle">
+                Simple dashboard untuk mencoba enkripsi & dekripsi AES dengan tampilan yang lebih bersih dan nyaman dibaca.
             </p>
         </div>
         <div>
@@ -134,11 +197,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
 # =========================
 #  HALAMAN: DASHBOARD
 # =========================
 if menu == "Dashboard":
+    st.markdown('<div class="section-label">Ringkasan Aktivitas</div>', unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
@@ -170,7 +233,9 @@ if menu == "Dashboard":
             f"""
             <div class="card">
                 <div class="card-title">Last Algorithm</div>
-                <div class="card-value" style="font-size:1.2rem;">{st.session_state.last_algo}</div>
+                <div class="card-value" style="font-size:1.3rem;">
+                    {st.session_state.last_algo}
+                </div>
                 <div class="small-label">Varian AES terakhir yang dipakai.</div>
             </div>
             """,
@@ -184,7 +249,7 @@ if menu == "Dashboard":
             f"""
             <div class="card">
                 <div class="card-title">Last Operation</div>
-                <div class="card-value" style="font-size:1.2rem; color:{color};">
+                <div class="card-value" style="font-size:1.3rem; color:{color};">
                     {status_text}
                 </div>
                 <div class="small-label">Mode: {st.session_state.last_mode}</div>
@@ -193,25 +258,28 @@ if menu == "Dashboard":
             unsafe_allow_html=True,
         )
 
-    st.markdown("### 🔎 Ringkasan")
+    st.markdown("### 📊 Ringkasan")
     st.write(
         """
-        Halaman ini hanya menampilkan statistik kecil untuk memantau
-        berapa kali kamu melakukan enkripsi/dekripsi dan varian algoritma yang dipakai.
-        Semua angka dihitung di sisi frontend (session state).
+        Halaman ini menampilkan statistik singkat:
+        - Berapa kali enkripsi dan dekripsi berhasil dilakukan.
+        - Varian AES terakhir yang digunakan.
+        - Status operasi terakhir (berhasil atau error).
+
+        Semua angka dihitung di sisi frontend (session state), dan akan reset jika halaman direfresh.
         """
     )
-
 
 # =========================
 #  HALAMAN: ENCRYPT / DECRYPT
 # =========================
 elif menu == "Encrypt / Decrypt":
 
+    st.markdown('<div class="section-label">Pengaturan & Input</div>', unsafe_allow_html=True)
     top_left, top_right = st.columns([2, 1])
 
     with top_left:
-        st.markdown("### 🔧 Pengaturan")
+        st.markdown("### Pengaturan")
 
         algo = st.selectbox(
             "Pilih Algoritma AES",
@@ -232,25 +300,25 @@ elif menu == "Encrypt / Decrypt":
         )
 
     with top_right:
-        st.markdown("### ℹ️ Petunjuk Singkat")
+        st.markdown("### Petunjuk Singkat")
         if mode == "Enkripsi":
             st.markdown(
                 """
-                - Masukkan **plaintext biasa** (bisa huruf, angka, simbol).\n
-                - Output akan berupa **hex string**.\n
+                - Masukkan **plaintext biasa** (huruf, angka, simbol).
+                - Output akan berupa **hex string**.
                 - Simpan hex string itu jika ingin didekripsi lagi.
                 """
             )
         else:
             st.markdown(
                 """
-                - Masukkan **ciphertext dalam bentuk hex** (hasil enkripsi sebelumnya).\n
-                - Pastikan tidak ada spasi & panjangnya valid (kelipatan 32 hex per blok).\n
+                - Masukkan **ciphertext dalam bentuk hex** (hasil enkripsi sebelumnya).
+                - Pastikan tidak ada spasi dan panjangnya valid (kelipatan 32 hex per blok).
                 - Hasil dekripsi berupa **plaintext**.
                 """
             )
 
-    st.markdown("### 📝 Input Data")
+    st.markdown("### Input Data")
 
     if mode == "Enkripsi":
         text_label = "Plaintext"
@@ -269,7 +337,7 @@ elif menu == "Encrypt / Decrypt":
     with col_btn:
         proses = st.button("🚀 Proses", use_container_width=True)
 
-    st.markdown("### 📤 Output")
+    st.markdown("### Output")
 
     if proses:
         if not user_text.strip():
@@ -299,7 +367,6 @@ elif menu == "Encrypt / Decrypt":
                 st.session_state.last_mode = mode
                 st.session_state.last_success = True
 
-                # tampilkan hasil
                 if mode == "Enkripsi":
                     st.success("Berhasil melakukan enkripsi.")
                     st.code(result, language="text")
@@ -316,15 +383,19 @@ elif menu == "Encrypt / Decrypt":
 #  HALAMAN: INFO
 # =========================
 else:
-    st.markdown("### ℹ️ Tentang Aplikasi")
+    st.markdown('<div class="section-label">Informasi Aplikasi</div>', unsafe_allow_html=True)
+    st.markdown("### Tentang Aplikasi")
     st.write(
         """
         Aplikasi ini adalah demo sederhana untuk:
         - Enkripsi dan dekripsi teks menggunakan **AES-128**.
         - Membandingkan implementasi **AES standar** dan **AES SBOX44 (modifikasi)**.
-        
+
         Backend fungsi AES diambil dari file `aes_backend.py` yang berisi
-        implementasi lengkap (S-BOX, key schedule, dll) yang sudah kamu buat.
+        implementasi lengkap (S-BOX, key schedule, dan komponen lain).
         """
     )
-    st.info("Kalau ingin menambahkan grafik, tabel, atau log detail blok AES, tinggal kita tambah section baru di sini. 😉")
+    st.info(
+        "Untuk menambahkan grafik, tabel, atau log detail blok AES, "
+        "bisa ditambahkan section baru di halaman ini."
+    )
