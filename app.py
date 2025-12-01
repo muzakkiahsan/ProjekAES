@@ -1,394 +1,330 @@
-# app.py
 import streamlit as st
-import textwrap
-
-import aes_backend as kripto
+from aes_backend import (
+    encrypt_aes_std_str,
+    decrypt_aes_std_str,
+    encrypt_aes_44_str,
+    decrypt_aes_44_str,
+)
 
 # =========================
-# Styling dasar + "card"
+#  CONFIG + CUSTOM STYLE
 # =========================
-CARD_CSS = """
-<style>
-    .main {
-        background-color: #f5f7fb;
-    }
-    .card {
-        background-color: #ffffff;
-        border-radius: 12px;
-        padding: 1.25rem 1.5rem;
-        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
-        border: 1px solid rgba(148, 163, 184, 0.3);
-        margin-bottom: 1.5rem;
-    }
-    .card-title {
-        font-size: 1.05rem;
-        font-weight: 600;
-        margin-bottom: 0.35rem;
-    }
-    .card-subtitle {
-        font-size: 0.85rem;
-        color: #6b7280;
-        margin-bottom: 0.8rem;
-    }
-    .pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.10rem 0.55rem;
-        border-radius: 999px;
-        font-size: 0.70rem;
-        font-weight: 500;
-        background: #eef2ff;
-        color: #3730a3;
-        margin-right: 0.35rem;
-    }
-    .metric-row {
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-        margin-top: 0.75rem;
-    }
-    .metric-pill {
-        flex: 1 1 140px;
-        border-radius: 999px;
-        padding: 0.35rem 0.75rem;
-        background: #f3f4f6;
-        font-size: 0.8rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .metric-label {
-        color: #6b7280;
-    }
-    .metric-value {
-        font-weight: 600;
-        color: #111827;
-    }
-</style>
-"""
-
 st.set_page_config(
-    page_title="AES vs SBOX44 Crypto Demo",
+    page_title="AES Crypto Dashboard",
     page_icon="🔐",
     layout="wide",
 )
 
-st.markdown(CARD_CSS, unsafe_allow_html=True)
+PRIMARY = "#2F54EB"     # biru utama (mirip dashboard)
+ACCENT  = "#10B981"     # hijau (status OK)
+DANGER  = "#EF4444"     # merah
+BG      = "#F5F7FB"     # background lembut
+
+st.markdown(
+    f"""
+    <style>
+    /* background halaman */
+    .stApp {{
+        background-color: {BG};
+    }}
+    /* container utama biar agak mepet kiri-kanan */
+    .block-container {{
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }}
+    .card {{
+        background-color: #FFFFFF;
+        border-radius: 14px;
+        padding: 1.1rem 1.3rem;
+        border: 1px solid #E5E7EB;
+        box-shadow: 0 1px 3px rgba(15,23,42,0.08);
+    }}
+    .card-title {{
+        font-size: 0.85rem;
+        color: #6B7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.35rem;
+    }}
+    .card-value {{
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #111827;
+    }}
+    .badge-primary {{
+        background-color: {PRIMARY};
+        color: white;
+        border-radius: 999px;
+        padding: 0.15rem 0.6rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }}
+    .small-label {{
+        font-size: 0.8rem;
+        color: #6B7280;
+    }}
+    textarea {{
+        font-size: 0.9rem !important;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # =========================
-# Header
+#  SESSION STATE (STATISTIK)
+# =========================
+if "total_encrypt" not in st.session_state:
+    st.session_state.total_encrypt = 0
+if "total_decrypt" not in st.session_state:
+    st.session_state.total_decrypt = 0
+if "last_algo" not in st.session_state:
+    st.session_state.last_algo = "-"
+if "last_mode" not in st.session_state:
+    st.session_state.last_mode = "-"
+if "last_success" not in st.session_state:
+    st.session_state.last_success = False
+
+
+# =========================
+#  SIDEBAR
+# =========================
+with st.sidebar:
+    st.markdown("### 🔐 AES Crypto Tool")
+    st.markdown(
+        """
+        <span class="small-label">
+        Demo sederhana enkripsi & dekripsi AES dengan dua varian:
+        <br>- AES standar (S-BOX standar)<br>- AES SBOX44 (modifikasi)
+        </span>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("---")
+    menu = st.radio(
+        "Navigation",
+        ["Dashboard", "Encrypt / Decrypt", "Info"],
+        index=1,
+    )
+
+    st.markdown("---")
+    st.caption("Made with Streamlit")
+
+
+# =========================
+#  HEADER ATAS
 # =========================
 st.markdown(
-    """
-    <div style="margin-bottom: 1rem;">
-        <h2 style="margin-bottom: 0.25rem;">AES & SBOX44 Demo</h2>
-        <p style="color:#6b7280; font-size:0.9rem; margin-bottom:0.5rem;">
-            UI untuk eksperimen enkripsi, avalanche effect, dan key sensitivity dari AES standar dan varian SBOX44.
-        </p>
+    f"""
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div>
+            <h2 style="margin-bottom:0;">AES Crypto Dashboard</h2>
+            <p style="color:#6B7280; margin-top:0.2rem; font-size:0.9rem;">
+                Simple dashboard untuk mencoba enkripsi & dekripsi AES.
+            </p>
+        </div>
+        <div>
+            <span class="badge-primary">Demo</span>
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-tab_enkripsi, tab_avalanche = st.tabs(["🔑 Enkripsi / Dekripsi", "🌊 Avalanche & Key Sensitivity"])
 
-# ======================================================
-# TAB 1 — ENKRIPSI / DEKRIPSI
-# ======================================================
-with tab_enkripsi:
-    col1, col2 = st.columns(2)
+# =========================
+#  HALAMAN: DASHBOARD
+# =========================
+if menu == "Dashboard":
+    col1, col2, col3, col4 = st.columns(4)
 
-    # ------------- Kartu input plaintext / key -------------
     with col1:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-
-        st.markdown('<div class="card-title">Input Pesan & Kunci</div>', unsafe_allow_html=True)
         st.markdown(
-            '<div class="card-subtitle">Gunakan key 16 karakter (128-bit). Mode ECB, hanya untuk demo / riset.</div>',
+            f"""
+            <div class="card">
+                <div class="card-title">Total Encryption</div>
+                <div class="card-value">{st.session_state.total_encrypt}</div>
+                <div class="small-label">Jumlah proses enkripsi yang sukses.</div>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
 
-        default_plain = "Kriptografi melindungi pesan rahasia"
-        plaintext = st.text_area(
-            "Plaintext",
-            value=default_plain,
-            height=120,
-            key="enc_plaintext",
-        )
-
-        key_str = st.text_input(
-            "Key (16 karakter)",
-            value="1234567890ABCDEF",
-            max_chars=16,
-            key="enc_key",
-        )
-
-        col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
-
-        with col_btn1:
-            enc_std = st.button("Encrypt AES Std", key="btn_enc_std")
-        with col_btn2:
-            enc_44 = st.button("Encrypt SBOX44", key="btn_enc_44")
-        with col_btn3:
-            dec_btn = st.button("Decrypt (teks di bawah)", key="btn_dec")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # ------------- Kartu hasil cipher -------------
     with col2:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown('<div class="card-title">Ciphertext & Hasil Dekripsi</div>', unsafe_allow_html=True)
         st.markdown(
-            '<div class="card-subtitle">Teks dienkripsi menjadi hex string. Dekripsi akan mengembalikan plaintext.</div>',
+            f"""
+            <div class="card">
+                <div class="card-title">Total Decryption</div>
+                <div class="card-value">{st.session_state.total_decrypt}</div>
+                <div class="small-label">Jumlah proses dekripsi yang sukses.</div>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
 
-        cipher_std = st.text_area(
-            "Cipher AES Standar (hex)",
-            height=120,
-            key="cipher_std",
-        )
-        cipher_44 = st.text_area(
-            "Cipher AES SBOX44 (hex)",
-            height=120,
-            key="cipher_44",
-        )
-        decrypted_output = st.text_area(
-            "Plaintext dari dekripsi",
-            height=120,
-            key="dec_plaintext_out",
+    with col3:
+        st.markdown(
+            f"""
+            <div class="card">
+                <div class="card-title">Last Algorithm</div>
+                <div class="card-value" style="font-size:1.2rem;">{st.session_state.last_algo}</div>
+                <div class="small-label">Varian AES terakhir yang dipakai.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
+    with col4:
+        color = ACCENT if st.session_state.last_success else DANGER
+        status_text = "Success" if st.session_state.last_success else "Error / None"
+        st.markdown(
+            f"""
+            <div class="card">
+                <div class="card-title">Last Operation</div>
+                <div class="card-value" style="font-size:1.2rem; color:{color};">
+                    {status_text}
+                </div>
+                <div class="small-label">Mode: {st.session_state.last_mode}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("### 🔎 Ringkasan")
+    st.write(
+        """
+        Halaman ini hanya menampilkan statistik kecil untuk memantau
+        berapa kali kamu melakukan enkripsi/dekripsi dan varian algoritma yang dipakai.
+        Semua angka dihitung di sisi frontend (session state).
+        """
+    )
 
-    # ------------- Logika proses enkripsi/dekripsi -------------
 
-    def _validate_key(k: str):
-        if len(k.encode("utf-8")) != 16:
-            st.error("Key harus tepat 16 byte (16 karakter sederhana).")
-            return False
-        return True
+# =========================
+#  HALAMAN: ENCRYPT / DECRYPT
+# =========================
+elif menu == "Encrypt / Decrypt":
 
-    # ENCRYPT AES STD
-    if enc_std:
-        if _validate_key(key_str):
+    top_left, top_right = st.columns([2, 1])
+
+    with top_left:
+        st.markdown("### 🔧 Pengaturan")
+
+        algo = st.selectbox(
+            "Pilih Algoritma AES",
+            ["AES Standard (S-BOX Std)", "AES SBOX44 (Modifikasi)"],
+        )
+
+        mode = st.segmented_control(
+            "Mode Operasi",
+            options=["Enkripsi", "Dekripsi"],
+            default="Enkripsi",
+        )
+
+        key = st.text_input(
+            "Key (16 karakter / 128-bit)",
+            type="password",
+            help="Key harus tepat 16 karakter (AES-128).",
+            max_chars=32,  # jaga-jaga, tapi nanti dicek lagi oleh backend
+        )
+
+    with top_right:
+        st.markdown("### ℹ️ Petunjuk Singkat")
+        if mode == "Enkripsi":
+            st.markdown(
+                """
+                - Masukkan **plaintext biasa** (bisa huruf, angka, simbol).\n
+                - Output akan berupa **hex string**.\n
+                - Simpan hex string itu jika ingin didekripsi lagi.
+                """
+            )
+        else:
+            st.markdown(
+                """
+                - Masukkan **ciphertext dalam bentuk hex** (hasil enkripsi sebelumnya).\n
+                - Pastikan tidak ada spasi & panjangnya valid (kelipatan 32 hex per blok).\n
+                - Hasil dekripsi berupa **plaintext**.
+                """
+            )
+
+    st.markdown("### 📝 Input Data")
+
+    if mode == "Enkripsi":
+        text_label = "Plaintext"
+        text_placeholder = "Tulis pesan yang ingin dienkripsi..."
+    else:
+        text_label = "Ciphertext (Hex)"
+        text_placeholder = "Tempel ciphertext hex di sini..."
+
+    user_text = st.text_area(
+        text_label,
+        height=180,
+        placeholder=text_placeholder,
+    )
+
+    col_btn, col_dummy = st.columns([1, 3])
+    with col_btn:
+        proses = st.button("🚀 Proses", use_container_width=True)
+
+    st.markdown("### 📤 Output")
+
+    if proses:
+        if not user_text.strip():
+            st.warning("Input masih kosong.")
+        elif not key:
+            st.warning("Key masih kosong.")
+        else:
             try:
-                ct = kripto.encrypt_aes_std_str(plaintext, key_str)
-                # tampilkan di text_area
-                st.session_state["cipher_std"] = ct
-            except Exception as e:
-                st.error(f"Enkripsi AES Std gagal: {e}")
-
-    # ENCRYPT SBOX44
-    if enc_44:
-        if _validate_key(key_str):
-            try:
-                ct = kripto.encrypt_aes_44_str(plaintext, key_str)
-                # tampilkan di text_area
-                st.session_state["cipher_44"] = ct
-            except Exception as e:
-                st.error(f"Enkripsi SBOX44 gagal: {e}")
-
-    # DECRYPT
-    if dec_btn:
-        if _validate_key(key_str):
-            try:
-                # ambil dari widget (yang sudah otomatis sinkron dengan session_state)
-                src_std = st.session_state.get("cipher_std", "").strip()
-                src_44 = st.session_state.get("cipher_44", "").strip()
-
-                if src_std:
-                    plain = kripto.decrypt_aes_std_str(src_std, key_str)
-                elif src_44:
-                    plain = kripto.decrypt_aes_44_str(src_44, key_str)
+                # pilih fungsi backend berdasarkan algoritma & mode
+                if algo.startswith("AES Standard"):
+                    if mode == "Enkripsi":
+                        result = encrypt_aes_std_str(user_text, key)
+                        st.session_state.total_encrypt += 1
+                    else:
+                        result = decrypt_aes_std_str(user_text.strip(), key)
+                        st.session_state.total_decrypt += 1
+                    st.session_state.last_algo = "AES Standard"
                 else:
-                    plain = ""
-                    st.warning("Isi salah satu ciphertext (AES Std atau SBOX44) sebelum dekripsi.")
+                    if mode == "Enkripsi":
+                        result = encrypt_aes_44_str(user_text, key)
+                        st.session_state.total_encrypt += 1
+                    else:
+                        result = decrypt_aes_44_str(user_text.strip(), key)
+                        st.session_state.total_decrypt += 1
+                    st.session_state.last_algo = "AES SBOX44"
 
-                st.session_state["dec_plaintext_out"] = plain
+                st.session_state.last_mode = mode
+                st.session_state.last_success = True
+
+                # tampilkan hasil
+                if mode == "Enkripsi":
+                    st.success("Berhasil melakukan enkripsi.")
+                    st.code(result, language="text")
+                else:
+                    st.success("Berhasil melakukan dekripsi.")
+                    st.code(result, language="text")
+
             except Exception as e:
-                st.error(f"Dekripsi gagal: {e}")
+                st.session_state.last_mode = mode
+                st.session_state.last_success = False
+                st.error(f"Terjadi error: {e}")
 
-# ======================================================
-# TAB 2 — AVALANCHE & KEY SENSITIVITY
-# ======================================================
-with tab_avalanche:
-    col_left, col_right = st.columns(2)
-
-    # ---------- Avalanche Plaintext Card ----------
-    with col_left:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown('<div class="card-title">Avalanche Effect (flip 1 bit plaintext)</div>', unsafe_allow_html=True)
-        st.markdown(
-            """
-            <div class="card-subtitle">
-            Satu bit pada plaintext di-flip, lalu dihitung seberapa banyak bit ciphertext berubah
-            pada AES standar vs SBOX44.
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        plain_av = st.text_area(
-            "Plaintext (untuk uji avalanche)",
-            value="Kriptografi melindungi pesan rahasia",
-            height=120,
-            key="av_plain",
-        )
-        key_av = st.text_input(
-            "Key (16 karakter, avalanche)",
-            value="1234567890ABCDEF",
-            max_chars=16,
-            key="av_key",
-        )
-
-        btn_run_av = st.button("Hitung Avalanche Effect", key="btn_run_av")
-
-        if btn_run_av:
-            if len(key_av.encode("utf-8")) != 16:
-                st.error("Key avalanche harus 16 byte.")
-            elif len(plain_av.encode("utf-8")) == 0:
-                st.error("Plaintext tidak boleh kosong.")
-            else:
-                try:
-                    res_av = kripto.avalanche_plaintext(plain_av, key_av)
-                    std_p = res_av["std"]["percent"]
-                    std_chg = res_av["std"]["changed_bits"]
-                    std_tot = res_av["std"]["total_bits"]
-
-                    s44_p = res_av["sbox44"]["percent"]
-                    s44_chg = res_av["sbox44"]["changed_bits"]
-                    s44_tot = res_av["sbox44"]["total_bits"]
-
-                    st.markdown(
-                        f"""
-                        <div class="metric-row">
-                            <div class="metric-pill">
-                                <span class="metric-label">AES Std</span>
-                                <span class="metric-value">{std_p:.2f}%  ({std_chg}/{std_tot} bit)</span>
-                            </div>
-                            <div class="metric-pill">
-                                <span class="metric-label">SBOX44</span>
-                                <span class="metric-value">{s44_p:.2f}%  ({s44_chg}/{s44_tot} bit)</span>
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-
-                    with st.expander("Detail ciphertext (block pertama)", expanded=False):
-                        st.code(
-                            textwrap.dedent(
-                                f"""
-                                AES Std:
-                                  CT1: {res_av["std"]["ct1"]}
-                                  CT2: {res_av["std"]["ct2"]}
-
-                                SBOX44:
-                                  CT1: {res_av["sbox44"]["ct1"]}
-                                  CT2: {res_av["sbox44"]["ct2"]}
-                                """
-                            ).strip(),
-                            language="text",
-                        )
-                except Exception as e:
-                    st.error(f"Perhitungan avalanche gagal: {e}")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # ---------- Key Sensitivity Card ----------
-    with col_right:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown('<div class="card-title">Key Sensitivity (flip 1 bit key)</div>', unsafe_allow_html=True)
-        st.markdown(
-            """
-            <div class="card-subtitle">
-            Satu bit pada key di-flip, lalu dihitung perubahan bit ciphertext untuk AES standar dan SBOX44.
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        plain_key = st.text_area(
-            "Plaintext (untuk uji key sensitivity)",
-            value="Kriptografi melindungi pesan rahasia",
-            height=120,
-            key="ks_plain",
-        )
-        key_ks = st.text_input(
-            "Key (16 karakter, sebelum flip)",
-            value="1234567890ABCDEF",
-            max_chars=16,
-            key="ks_key",
-        )
-
-        btn_run_ks = st.button("Hitung Key Sensitivity", key="btn_run_ks")
-
-        if btn_run_ks:
-            if len(key_ks.encode("utf-8")) != 16:
-                st.error("Key harus 16 byte.")
-            elif len(plain_key.encode("utf-8")) == 0:
-                st.error("Plaintext tidak boleh kosong.")
-            else:
-                try:
-                    res_ks = kripto.key_sensitivity(plain_key, key_ks)
-
-                    std_p = res_ks["std"]["percent"]
-                    std_chg = res_ks["std"]["changed_bits"]
-                    std_tot = res_ks["std"]["total_bits"]
-
-                    s44_p = res_ks["sbox44"]["percent"]
-                    s44_chg = res_ks["sbox44"]["changed_bits"]
-                    s44_tot = res_ks["sbox44"]["total_bits"]
-
-                    st.markdown(
-                        """
-                        <div class="pill">Key di-flip 1 bit pada byte pertama</div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-
-                    st.markdown(
-                        f"""
-                        <div class="metric-row">
-                            <div class="metric-pill">
-                                <span class="metric-label">AES Std</span>
-                                <span class="metric-value">{std_p:.2f}%  ({std_chg}/{std_tot} bit)</span>
-                            </div>
-                            <div class="metric-pill">
-                                <span class="metric-label">SBOX44</span>
-                                <span class="metric-value">{s44_p:.2f}%  ({s44_chg}/{s44_tot} bit)</span>
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-
-                    with st.expander("Detail key & ciphertext", expanded=False):
-                        st.code(
-                            textwrap.dedent(
-                                f"""
-                                Key:
-                                  Original: {res_ks["key_original_hex"]}
-                                  Modified: {res_ks["key_modified_hex"]}
-
-                                AES Std:
-                                  CT1: {res_ks["std"]["ct1"]}
-                                  CT2: {res_ks["std"]["ct2"]}
-
-                                SBOX44:
-                                  CT1: {res_ks["sbox44"]["ct1"]}
-                                  CT2: {res_ks["sbox44"]["ct2"]}
-                                """
-                            ).strip(),
-                            language="text",
-                        )
-                except Exception as e:
-                    st.error(f"Perhitungan key sensitivity gagal: {e}")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-
-
-
+# =========================
+#  HALAMAN: INFO
+# =========================
+else:
+    st.markdown("### ℹ️ Tentang Aplikasi")
+    st.write(
+        """
+        Aplikasi ini adalah demo sederhana untuk:
+        - Enkripsi dan dekripsi teks menggunakan **AES-128**.
+        - Membandingkan implementasi **AES standar** dan **AES SBOX44 (modifikasi)**.
+        
+        Backend fungsi AES diambil dari file `aes_backend.py` yang berisi
+        implementasi lengkap (S-BOX, key schedule, dll) yang sudah kamu buat.
+        """
+    )
+    st.info("Kalau ingin menambahkan grafik, tabel, atau log detail blok AES, tinggal kita tambah section baru di sini. 😉")
